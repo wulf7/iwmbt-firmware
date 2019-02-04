@@ -3,6 +3,7 @@ PROG=	iwmbtfw
 SRCS+=	iwmbtfw.c
 SRCS+=	${SOURCES:C|^.*/|src/|}
 FILES!=	ls firmware/*
+FILES+=	iwmbt-firmware.conf
 
 CFLAGS+=-I. -I./include -Wall -Wextra
 CFLAGS+=-DDEFAULT_FIRMWARE_PATH=\"${FILESDIR}\"
@@ -12,6 +13,8 @@ MK_MAN=	no
 PREFIX?=	/usr/local
 BINDIR?=	${PREFIX}/sbin
 FILESDIR?=	${PREFIX}/share/iwmbt-firmware
+DEVDDIR?=	${PREFIX}/etc/devd
+FILESDIR_iwmbt-firmware.conf=	${DEVDDIR}
 
 BTSTACK=btstack
 SOURCES=src/hci_cmd.c src/hci_dump.c src/btstack_util.c \

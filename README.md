@@ -12,4 +12,3 @@ most unportable part is Makefile.
 * Add 'usb bus.unit' to 'usb path' convertor to handle ugenX.X addresses
 * Manpage
 * Improve Make-fu
-* Config file for devd autoloader
