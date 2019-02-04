@@ -9,9 +9,9 @@ CFLAGS+=-DDEFAULT_FIRMWARE_PATH=\"${FILESDIR}\"
 LDADD=	-lusb
 MK_MAN=	no
 
-PREFIX=	/usr/local
-BINDIR=	${PREFIX}/bin
-FILESDIR=${PREFIX}/share/${PROG}
+PREFIX?=	/usr/local
+BINDIR?=	${PREFIX}/sbin
+FILESDIR?=	${PREFIX}/share/iwmbt-firmware
 
 BTSTACK=btstack
 SOURCES=src/hci_cmd.c src/hci_dump.c src/btstack_util.c \
