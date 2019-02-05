@@ -5,9 +5,19 @@
 #ifndef __BTSTACK_CONFIG
 #define __BTSTACK_CONFIG
 
-// Hack to disable kernel driver detachment in hci_transport_h2_libusb.c
-#ifndef __APPLE__
-#define __APPLE__ 1
+// Detach kernel driver on FreeBSD to workaround firmware bootloader lock up
+// caused by FreeBSD bluetooth stack initialization procedure. This action
+// does not fix lock up but allow firmware downloader to win OS boot-time race
+// against bt-stack init script (/etc/rc.d/bluetooth) so at the init time the
+// bootloader is already replaced with fully functional firmware.
+#ifdef __FreeBSD__
+#define DETACH_KERNEL_DRIVER
+#endif
+
+// Defining __APPLE__ is a hack to disable kernel driver detachment
+// in hci_transport_h2_libusb.c
+#if !defined(__APPLE__) && !defined(DETACH_KERNEL_DRIVER)
+#define __APPLE__
 #endif
 
 // Place missing hci_dump.c #include here to avoid source patching
