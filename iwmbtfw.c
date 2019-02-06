@@ -31,6 +31,8 @@
 
 /* minimal setup for HCI code */
 
+#include "btstack_config.h"
+
 #include <sys/time.h>
 
 #include <stdint.h>
@@ -40,7 +42,13 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include "btstack_config.h"
+#ifdef SUPPORT_UGENXX
+#include <sys/ioctl.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <paths.h>
+#include <dev/usb/usb_ioctl.h>
+#endif
 
 #include "btstack_debug.h"
 #include "btstack_defines.h"
@@ -57,15 +65,20 @@
 #define DEFAULT_TIMEOUT 5000 /* msec. */
 #endif
 
+// Max depth for USB 3?. Keep in sync with src/hci_transport_h2_libusb.c
 #define USB_MAX_PATH_LEN 7
 
 static void
 usage(void)
 {
-	printf("Usage: iwmbtfw (-d(dd)) (-D) (-u 11:22) (-f firmware path)\n");
+	printf("Usage: iwmbtfw (-d(dd)) (-D) (-u path) (-f firmware path)\n");
 	printf("    -d: enable debugging. Repeat to increase verbosity\n");
 	printf("    -D: dump HCI packets to stdout\n");
-	printf("    -u: usb path to operate upon\n");
+#ifdef SUPPORT_UGENXX
+	printf("    -u: usb device (ugenX.X) to operate upon\n");
+#else
+	printf("    -u: usb path (XX(:YY(:ZZ))) to operate upon\n");
+#endif
 	printf("    -f: firmware path, if not default\n");
 	exit(127);
 }
@@ -101,6 +114,56 @@ intel_firmware_done(int result)
 	exit(0);
 }
 
+static int
+optarg_to_usb_path(const char *optarg, uint8_t *usb_path)
+{
+	int usb_path_len = 0;
+#ifdef SUPPORT_UGENXX
+	struct usb_device_port_path usb_dpp;
+	char ugen_path[16];
+	int fd, iores;
+
+	snprintf(ugen_path, sizeof(ugen_path), "%s%s", _PATH_DEV, optarg);
+	if ((fd = open(ugen_path, O_RDONLY|O_CLOEXEC)) < 0) {
+		fprintf(stderr, "Failed to open %s: %s\n", ugen_path,
+		    strerror(errno));
+		return (-1);
+	}
+	iores = ioctl(fd, USB_GET_DEV_PORT_PATH, &usb_dpp);
+	close(fd);
+	if (iores < 0) {
+		fprintf(stderr, "Failed to get USB Path for %s: %s\n",
+		    ugen_path, strerror(errno));
+		return (-1);
+	}
+	if (usb_dpp.udp_port_level > USB_MAX_PATH_LEN) {
+		fprintf(stderr,
+		    "Retrieved USB path is too long. Revert to autodetect\n");
+		return (0);
+	}
+	usb_path_len = usb_dpp.udp_port_level;
+	memcpy(usb_path, usb_dpp.udp_port_no, usb_path_len);
+#else
+	char *delimiter;
+	int port;
+
+	printf("Specified USB Path: ");
+	while (1){
+		port = strtol(optarg, &delimiter, 16);
+		usb_path[usb_path_len] = port;
+		usb_path_len++;
+		printf("%02x ", port);
+		if (!delimiter)
+			break;
+		if (*delimiter != ':' && *delimiter != '-')
+			break;
+		optarg = delimiter + 1;
+	}
+	printf("\n");
+#endif
+	return (usb_path_len);
+}
+
 int
 main(int argc, char * argv[])
 {
@@ -111,7 +174,6 @@ main(int argc, char * argv[])
 	int do_dump = 0;
 	int log_level = 0;
 	int usb_path_len = 0;
-	const char *usb_path_string = NULL;
 	struct itimerval tv;
 
 	/* Parse command line arguments */
@@ -123,24 +185,12 @@ main(int argc, char * argv[])
 		case 'D':
 			do_dump = 1;
 			break;
-		case 'u': /* parse command line options for "-u 11:22:33" */
+		case 'u': /* USB path */
 			if (usb_path_len)
 				break;
-			usb_path_string = optarg;
-			printf("Specified USB Path: ");
-			while (1){
-				char * delim;
-				int port = strtol(usb_path_string, &delim, 16);
-				usb_path[usb_path_len] = port;
-				usb_path_len++;
-				printf("%02x ", port);
-				if (!delim)
-					break;
-				if (*delim != ':' && *delim != '-')
-					break;
-				usb_path_string = delim + 1;
-			}
-			printf("\n");
+			usb_path_len = optarg_to_usb_path(optarg, usb_path);
+			if (usb_path_len < 0)
+				exit(3);
 			break;
 		case 'f': /* firmware path */
 			firmware_path = optarg;

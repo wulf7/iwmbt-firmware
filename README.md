@@ -9,6 +9,5 @@ operating system that has libusb ported to. At the moment of writing the
 most unportable part is Makefile.
 
 ## TODO
-* Add 'usb bus.unit' to 'usb path' convertor to handle ugenX.X addresses
 * Manpage
 * Improve Make-fu

@@ -14,6 +14,11 @@
 #define DETACH_KERNEL_DRIVER
 #endif
 
+// Specify USB device path in FreeBSD format (ugenX.X) rather than libusb one.
+#ifdef __FreeBSD__
+#define SUPPORT_UGENXX
+#endif
+
 // Defining __APPLE__ is a hack to disable kernel driver detachment
 // in hci_transport_h2_libusb.c
 #if !defined(__APPLE__) && !defined(DETACH_KERNEL_DRIVER)
