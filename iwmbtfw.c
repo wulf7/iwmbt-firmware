@@ -180,7 +180,7 @@ main(int argc, char * argv[])
 	signal(SIGALRM, intel_firmware_timeout);
 	memset(&tv, 0, sizeof(tv));
 	tv.it_value.tv_sec = DEFAULT_TIMEOUT / 1000;
-	tv.it_value.tv_usec = DEFAULT_TIMEOUT % 1000;;
+	tv.it_value.tv_usec = (DEFAULT_TIMEOUT % 1000) * 1000;
 	setitimer(ITIMER_REAL, &tv, NULL);
 
 	/* go */
