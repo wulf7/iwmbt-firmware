@@ -42,6 +42,7 @@
 
 #include "btstack_config.h"
 
+#include "btstack_debug.h"
 #include "btstack_defines.h"
 #include "btstack_run_loop.h"
 #include "btstack_run_loop_posix.h"
@@ -61,8 +62,9 @@
 static void
 usage(void)
 {
-	printf("Usage: iwmbtfw (-D) (-u 11:22) (-f firmware path)\n");
-	printf("    -D: enable debugging\n");
+	printf("Usage: iwmbtfw (-d(dd)) (-D) (-u 11:22) (-f firmware path)\n");
+	printf("    -d: enable debugging. Repeat to increase verbosity\n");
+	printf("    -D: dump HCI packets to stdout\n");
 	printf("    -u: usb path to operate upon\n");
 	printf("    -f: firmware path, if not default\n");
 	exit(127);
@@ -73,7 +75,8 @@ sigint_handler(int param)
 {
 
 	UNUSED(param);
-	fprintf(stderr, "CTRL-C - SIGINT received, shutting down..\n");   
+	fprintf(stderr, "CTRL-C - SIGINT received, shutting down..\n");
+	log_info("sigint_handler: shutting down");
 
 	exit(2);
 }
@@ -83,7 +86,8 @@ intel_firmware_timeout(int param)
 {
 
 	UNUSED(param);
-	fprintf(stderr, "Firmware downloading failed\n");   
+	fprintf(stderr, "Firmware downloading failed\n");
+	log_info("intel_firmware_timeout: shutting down");
 
 	exit(1);
 }
@@ -104,16 +108,20 @@ main(int argc, char * argv[])
 	char *firmware_path = DEFAULT_FIRMWARE_PATH;
 	uint8_t usb_path[USB_MAX_PATH_LEN];
 	int n;
-	int do_debug = 0;
+	int do_dump = 0;
+	int log_level = 0;
 	int usb_path_len = 0;
 	const char *usb_path_string = NULL;
 	struct itimerval tv;
 
 	/* Parse command line arguments */
-	while ((n = getopt(argc, argv, "Dd:f:hu:")) != -1) {
+	while ((n = getopt(argc, argv, "Ddf:hu:")) != -1) {
 		switch (n) {
+		case 'd':
+			log_level++;
+			break;
 		case 'D':
-			do_debug = 1;
+			do_dump = 1;
 			break;
 		case 'u': /* parse command line options for "-u 11:22:33" */
 			if (usb_path_len)
@@ -146,6 +154,13 @@ main(int argc, char * argv[])
 		}
 	}
 
+	/* Activate debugging facilities */
+	hci_dump_enable_log_level(HCI_DUMP_LOG_LEVEL_DEBUG, log_level > 2);
+	hci_dump_enable_log_level(HCI_DUMP_LOG_LEVEL_INFO, log_level > 1);
+	hci_dump_enable_log_level(HCI_DUMP_LOG_LEVEL_ERROR, log_level > 0);
+	if (do_dump)
+		hci_dump_open(NULL, HCI_DUMP_STDOUT);
+
 	/* Get started with BTstack */
 	btstack_run_loop_init(btstack_run_loop_posix_get_instance());
 	    
@@ -153,9 +168,6 @@ main(int argc, char * argv[])
 		hci_transport_usb_set_path(usb_path_len, usb_path);
 
 	btstack_chipset_intel_set_firmware_path(firmware_path);
-
-	if (do_debug)
-		hci_dump_open(NULL, HCI_DUMP_STDOUT);
 
 	/* Setup USB Transport */
 	transport = hci_transport_usb_instance();

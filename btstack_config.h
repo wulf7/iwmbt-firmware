@@ -33,8 +33,9 @@
 #define HAVE_POSIX_FILE_IO
 
 // BTstack features that can be enabled
-//#define ENABLE_LOG_DEBUG
-//#define ENABLE_LOG_INFO
+#define ENABLE_LOG_DEBUG
+#define ENABLE_LOG_INFO
+#define ENABLE_LOG_ERROR
 
 // BTstack configuration. buffers, sizes, ...
 #define HCI_ACL_PAYLOAD_SIZE (1691 + 4)
