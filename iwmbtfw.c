@@ -57,15 +57,15 @@
 #include "btstack_chipset_intel_firmware.h"
 #include "hci_dump.h"
 
-#ifndef DEFAULT_FIRMWARE_PATH
-#define DEFAULT_FIRMWARE_PATH "firmware"
+#ifndef FIRMWARE_PATH
+#define FIRMWARE_PATH "firmware"
 #endif
 
-#ifndef DEFAULT_TIMEOUT
-#define DEFAULT_TIMEOUT 5000 /* msec. */
+#ifndef DOWNLOAD_TIMEOUT
+#define DOWNLOAD_TIMEOUT 5000 /* msec. */
 #endif
 
-// Max depth for USB 3?. Keep in sync with src/hci_transport_h2_libusb.c
+/* Max depth for USB 3?. Keep in sync with src/hci_transport_h2_libusb.c */
 #define USB_MAX_PATH_LEN 7
 
 static void
@@ -80,13 +80,14 @@ usage(void)
 	printf("    -u: usb path (XX(:YY(:ZZ))) to operate upon\n");
 #endif
 	printf("    -f: firmware path, if not default\n");
+	printf("    -h: this message\n");
+
 	exit(127);
 }
 
 static void
 sigint_handler(int param)
 {
-
 	UNUSED(param);
 	fprintf(stderr, "CTRL-C - SIGINT received, shutting down..\n");
 	log_info("sigint_handler: shutting down");
@@ -97,7 +98,6 @@ sigint_handler(int param)
 static void
 intel_firmware_timeout(int param)
 {
-
 	UNUSED(param);
 	fprintf(stderr, "Firmware downloading failed\n");
 	log_info("intel_firmware_timeout: shutting down");
@@ -108,7 +108,6 @@ intel_firmware_timeout(int param)
 static void
 intel_firmware_done(int result)
 {
-
 	printf("Done %x\n", result);
 
 	exit(0);
@@ -168,7 +167,7 @@ int
 main(int argc, char * argv[])
 {
 	const hci_transport_t *transport;
-	char *firmware_path = DEFAULT_FIRMWARE_PATH;
+	char *firmware_path = FIRMWARE_PATH;
 	uint8_t usb_path[USB_MAX_PATH_LEN];
 	int n;
 	int do_dump = 0;
@@ -197,10 +196,9 @@ main(int argc, char * argv[])
 			break;
 		case 'h':
 			usage();
-			break;
+			/* NOT REACHED */
 		default:
 			break;
-			/* NOT REACHED */
 		}
 	}
 
@@ -229,8 +227,8 @@ main(int argc, char * argv[])
 	/* Handle downloading timeout */
 	signal(SIGALRM, intel_firmware_timeout);
 	memset(&tv, 0, sizeof(tv));
-	tv.it_value.tv_sec = DEFAULT_TIMEOUT / 1000;
-	tv.it_value.tv_usec = (DEFAULT_TIMEOUT % 1000) * 1000;
+	tv.it_value.tv_sec = DOWNLOAD_TIMEOUT / 1000;
+	tv.it_value.tv_usec = (DOWNLOAD_TIMEOUT % 1000) * 1000;
 	setitimer(ITIMER_REAL, &tv, NULL);
 
 	/* go */

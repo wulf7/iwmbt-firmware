@@ -6,7 +6,7 @@ FILES!=	test ! -d firmware || ls firmware/*
 FILES+=	iwmbt-firmware.conf
 
 CFLAGS+=-I. -I./include -Wall -Wextra
-CFLAGS+=-DDEFAULT_FIRMWARE_PATH=\"${FILESDIR}\"
+CFLAGS+=-DFIRMWARE_PATH=\"${FILESDIR}\"
 LDADD=	-lusb
 MK_MAN=	no
 
