@@ -9,6 +9,7 @@ CFLAGS+=-I. -I./include -Wall -Wextra
 CFLAGS+=-DFIRMWARE_PATH=\"${FILESDIR}\"
 LDADD=	-lusb
 MK_MAN=	no
+MK_DEBUG_FILES=	no
 
 PREFIX?=	/usr/local
 BINDIR?=	${PREFIX}/sbin
