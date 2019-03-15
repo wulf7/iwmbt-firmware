@@ -18,7 +18,7 @@ DEVDDIR?=	${PREFIX}/etc/devd
 FILESDIR_iwmbt-firmware.conf=	${DEVDDIR}
 
 BTSTACK=	btstack
-BTSTACK_COMMIT=	a563da7c504f59cdb6ba2c73b00867f9b0655f44
+BTSTACK_COMMIT=	ad7cba718043f6df01760889ce52fa75d6280eb9
 BTSTACK_SUBDIRS=src platform/libusb platform/posix chipset/intel
 BTSTACK_REGEX!=	echo "(${BTSTACK_SUBDIRS})" | sed -e 's/ /|/g'
 
