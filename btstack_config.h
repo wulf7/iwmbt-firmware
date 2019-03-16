@@ -19,6 +19,11 @@
 #define SUPPORT_UGENXX
 #endif
 
+// This hack disables USB reset issued by firmware downloader at the very
+// beginning as it triggers USB bus probe/attach sequence thus negating effect
+// of kernel driver detachment
+#define libusb_reset_device(arg) 0
+
 // Defining __APPLE__ is a hack to disable kernel driver detachment
 // in hci_transport_h2_libusb.c
 #if !defined(__APPLE__) && !defined(DETACH_KERNEL_DRIVER)
