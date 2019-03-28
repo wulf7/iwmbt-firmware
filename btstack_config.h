@@ -20,9 +20,15 @@
 #endif
 
 // This hack disables USB reset issued by firmware downloader at the very
-// beginning as it triggers USB bus probe/attach sequence thus negating effect
-// of kernel driver detachment
+// beginning and inserts it after succesful firmware downloading has happened.
+// Original code triggers USB bus probe/attach sequence at wrong place thus
+// negating effect of kernel driver detachment
+#include <libusb.h>
+void iwmbtfw_libusb_close(libusb_device_handle *handle);
+#ifndef DONT_OVERRIDE_LIBUSB
 #define libusb_reset_device(arg) 0
+#define libusb_close(arg) iwmbtfw_libusb_close(arg)
+#endif
 
 // Defining __APPLE__ is a hack to disable kernel driver detachment
 // in hci_transport_h2_libusb.c
@@ -37,6 +43,12 @@
 // function. Return something as BTstack discards returned value anyway.
 #ifdef __FreeBSD__
 #define libusb_pollfds_handle_timeouts(arg) 0
+#endif
+
+// FreeBSD version of libusb have broken libusb_set_debug implementation
+// It sets debug level rather than log level. So disable it to stop spam.
+#ifdef __FreeBSD__
+#define libusb_set_debug(arg1, arg2) 0
 #endif
 
 // Port related features

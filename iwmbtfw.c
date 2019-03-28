@@ -31,6 +31,7 @@
 
 /* minimal setup for HCI code */
 
+#define DONT_OVERRIDE_LIBUSB
 #include "btstack_config.h"
 
 #include <sys/time.h>
@@ -41,6 +42,8 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
+
+#include <libusb.h>
 
 #ifdef SUPPORT_UGENXX
 #include <sys/ioctl.h>
@@ -68,6 +71,19 @@
 /* Max depth for USB 3?. Keep in sync with src/hci_transport_h2_libusb.c */
 #define USB_MAX_PATH_LEN 7
 
+static const hci_transport_t *transport = NULL;
+static int dont_reset = 0;
+
+/* Injects USB reset before libusb close */
+void
+iwmbtfw_libusb_close(libusb_device_handle *handle)
+{
+	if (!dont_reset)
+		libusb_reset_device(handle);
+
+	libusb_close(handle);
+}
+
 static void
 usage(void)
 {
@@ -80,6 +96,7 @@ usage(void)
 	printf("    -u: usb path (XX(:YY(:ZZ))) to operate upon\n");
 #endif
 	printf("    -f: firmware path, if not default\n");
+	printf("    -r: do not reset USB after download. Prevents reprobe\n");
 	printf("    -h: this message\n");
 
 	exit(127);
@@ -91,6 +108,8 @@ sigint_handler(int param)
 	UNUSED(param);
 	fprintf(stderr, "CTRL-C - SIGINT received, shutting down..\n");
 	log_info("sigint_handler: shutting down");
+	if (transport != NULL)
+		transport->close();
 
 	exit(2);
 }
@@ -101,6 +120,8 @@ intel_firmware_timeout(int param)
 	UNUSED(param);
 	fprintf(stderr, "Firmware downloading failed\n");
 	log_info("intel_firmware_timeout: shutting down");
+	if (transport != NULL)
+		transport->close();
 
 	exit(1);
 }
@@ -109,6 +130,8 @@ static void
 intel_firmware_done(int result)
 {
 	printf("Done %x\n", result);
+	if (transport != NULL)
+		transport->close();
 
 	exit(0);
 }
@@ -166,7 +189,6 @@ optarg_to_usb_path(const char *optarg, uint8_t *usb_path)
 int
 main(int argc, char * argv[])
 {
-	const hci_transport_t *transport;
 	char *firmware_path = FIRMWARE_PATH;
 	uint8_t usb_path[USB_MAX_PATH_LEN];
 	int n;
@@ -193,6 +215,9 @@ main(int argc, char * argv[])
 			break;
 		case 'f': /* firmware path */
 			firmware_path = optarg;
+			break;
+		case 'r':
+			dont_reset = 1;
 			break;
 		case 'h':
 			usage();

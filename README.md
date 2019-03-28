@@ -77,7 +77,6 @@ full power off/on or suspend/resume cycle is required to restore device.
 That creates problem with devd which tries to run both tasks in parallel.
 To workaround it **iwmbtfw** performs kernel driver detachment on start
 that allows firmware downloader to win the race against init script.
-It is up to you to reattach ubt0 device after with e.g. "usbconfig reset".
 
 ## License
 
