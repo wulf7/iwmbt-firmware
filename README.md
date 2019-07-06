@@ -1,3 +1,15 @@
+# Deprecation notice
+
+This piece of software is obsoleted (on FreeBSD) by native firmware
+downloader which can be found at PR/237083 in FreeBSD bugzilla
+(https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=237083).
+ATM (7 july 2019) native downloader is not yet committed to the source
+tree so patching and recompiling of kernel and userworld is required.
+
+If you still have to use this downloader and are observing "Firmware
+downloading failed" error message at the start, please see comment #9
+in the aforementioned PR.
+
 # Bluetooth firmware downloader for Intel Wireless 8260/8265 Controllers
 
 **iwmbtfw** is a fork of BTstack (https://github.com/bluekitchen/btstack)
