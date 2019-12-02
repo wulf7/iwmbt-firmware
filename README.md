@@ -1,14 +1,14 @@
-# Deprecation notice
+# Deprecation notice (FreeBSD)
 
 This piece of software is obsoleted (on FreeBSD) by native firmware
-downloader which can be found at PR/237083 in FreeBSD bugzilla
-(https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=237083).
-ATM (7 july 2019) native downloader is not yet committed to the source
-tree so patching and recompiling of kernel and userworld is required.
+downloader which is committed to the source tree as r351196 (13-CURRENT) and
+merged to 12-STABLE as r352101.
 
 If you still have to use this downloader and are observing "Firmware
 downloading failed" error message at the start, please see comment #9
-in the aforementioned PR.
+to PR/237083 in FreeBSD bugzilla:
+
+  https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=237083
 
 # Bluetooth firmware downloader for Intel Wireless 8260/8265 Controllers
 
@@ -27,14 +27,13 @@ Support for older Intel bluetooth controllers like 0x8087/0x07dc and
 
 ## Requirements
 
-* gcc/clang, nmake (FreeBSD make)
+* gcc/clang, GNU make, pkg-config
 * libusb as external dependency
 * FreeBSD (Mac OS X and NetBSD should work after minor tweaking)
 * GNU make, git, curl and extended regex-awared find is required for bootstrapping from upstream source repository
 
 It is created primarily for FreeBSD but can be easily adopted to any other
-operating system that has libusb ported to. At the moment of writing the
-most unportable part is Makefile.
+operating system that has libusb ported to.
 
 ## Downloading
 
@@ -51,13 +50,24 @@ and push requests should be sent directly upstream:
 
 ## Building
 
-Building from a git snaphost is as simple as:
+Install libusb if it is not bundled with your OS. E.g. with homebrew on MacOSX:
 
-  $ make
+  $ brew install libusb-compat
+
+Install pkg-config. E.g. with homebrew on MacOSX:
+
+  $ brew install pkg-config
+
+You may edit some Makefile variables like CFLAGS and LDFLAGS with hands
+to handle libusb files location if pkg-config does not do it properly.
+
+Build iwmbtfw from a git snaphost (assuming GNU make name is gmake):
+
+  $ gmake
 
 Bootstrapping of vendor code from upstream repository can be made with:
 
-  $ make BTSTACK_COMMIT=<git commit-hash> clean-sources sources
+  $ gmake BTSTACK_COMMIT=<git commit-hash> clean-sources sources
 
 Of course, it is up to you to make sources buildable if upstream commit
 hash differs from one specified in enclosed Makefile.
@@ -66,10 +76,9 @@ hash differs from one specified in enclosed Makefile.
 
 To install files already built just type:
 
-  $ sudo make install
+  $ sudo gmake install
 
-It installs downloader executable, firmwares and devd configuration file
-for boot-time autoloading.
+It installs downloader executable, and firmwares.
 
 ## Running
 
